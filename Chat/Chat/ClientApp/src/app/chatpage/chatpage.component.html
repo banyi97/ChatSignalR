@@ -1,0 +1,8 @@
+<div class="container">
+    <mat-list *ngIf="sr.message$ | async as messages">
+        <mat-list-item *ngFor="let message of messages" [ngClass]="{'sender': checkId(message.sender), 'receiver': !checkId(message.sender)}" > {{message.message}} </mat-list-item>        
+    </mat-list>
+    <input matInput (keyup.enter)="send()" [(ngModel)]="messbox" type="text" >
+    <button mat-button (click)="send()" [disabled]="disableSend">Send</button>
+    <button mat-button (click)="exit()">Exit</button>
+</div>

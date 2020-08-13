@@ -1,0 +1,8 @@
+.sender{
+    background-color: antiquewhite;
+    direction: rtl;
+}
+.receiver{
+    background-color: coral;
+    direction: ltr;
+}

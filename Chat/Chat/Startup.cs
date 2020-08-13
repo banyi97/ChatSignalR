@@ -1,4 +1,6 @@
 using Chat.Controllers;
+using Chat.Interfaces;
+using Chat.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -27,6 +29,8 @@ namespace Chat
             {
                 configuration.RootPath = "ClientApp/dist";
             });
+
+            services.AddSingleton<IUserService>(new UserService());
 
             services.AddSignalR();
         }
