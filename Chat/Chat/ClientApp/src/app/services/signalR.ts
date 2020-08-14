@@ -12,6 +12,12 @@ export interface Message{
     sender: string
 }
 
+export interface UserDto{
+    connectionId:string
+    self: number,
+    userPreference: number
+}
+
 @Injectable({providedIn: 'root'})
 export class SignalRService {
     constructor(
@@ -26,6 +32,9 @@ export class SignalRService {
 
     private userSubject$: BehaviorSubject<Preference|null> = new BehaviorSubject<Preference|null>(null)
     public user$: Observable<Preference|null> = this.userSubject$.asObservable()  
+
+    private partnerSubject$: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false)
+    public partner$: Observable<boolean> = this.partnerSubject$.asObservable()     
 
     public get userIsNull() {
         return this.userSubject$.value === null
@@ -59,9 +68,9 @@ export class SignalRService {
 
     public searchPartner(pref: Preference){
         console.log("searchPartner")
-        let obj = {connectionId: this.hubConnection.connectionId, self: this.userSubject$.value, userPreference: pref}
-        console.log(obj)
-        this.hubConnection.invoke("searchPartner", obj).then(data =>{
+        const dto: UserDto = {connectionId: this.hubConnection.connectionId, self: this.userSubject$.value.preference, userPreference: pref.preference}
+        console.log(dto)
+        this.hubConnection.invoke("searchPartner", dto).then(data =>{
             console.log(data)
         }).catch(error => { 
             console.log(error)
@@ -69,44 +78,42 @@ export class SignalRService {
     } 
 
     public sendMessage(message: string){
+        console.log("sendMessage")
         this.hubConnection.invoke("sendMessage", {message: message, sender: this.hubConnection.connectionId}).then(data => {
             console.log(data)
         }).catch(error => console.log("error"))
     }
 
-    public testsearch(){
-        this.hubConnection.invoke("searchPartner", null).then(data => {
-            console.log(data)
-        }).catch(error => console.log("error"))
-    }
-
     public cancelSearch(){
-        this.hubConnection.invoke("CancelSearch", null).then(data => {
+        console.log("cancelSearch")
+        this.hubConnection.invoke("cancel").then(data => {
             console.log(data)
-        }).catch(error => console.log("error"))
+        }).catch(error => console.log(error))
     }
 
     public closeSession(){
+        console.log("closeSession")
+        if(this.messageSubject$.value === null)
+            return
         this.hubConnection.invoke("closeSession")
-        .then(data => {
-            console.log(data)
-        })
         .catch(error => console.log(error))
         .finally(() =>{
-            this.messageSubject$.next = null
+            this.messageSubject$.next(null)
             this.route.navigate([''])
         })
     }
 
     private openSession(){
+        console.log("openSession")
         this.hubConnection.on("openSession", (data) =>{
-            console.log(data)
+            this.partnerSubject$.next(true)
             this.messageSubject$.next([])
             this.route.navigate(["/chat"])
-        })
+        }), error => console.log(error)
     }
 
     private receiveMessageListener(){
+        console.log("receiveMessageListener")
         this.hubConnection.on("receiveMessage", (data)=>{
             console.log(data)
             this.messageSubject$.value.push(data)
@@ -114,11 +121,13 @@ export class SignalRService {
     }
 
     private partnerLeaveListener(){
-        this.hubConnection.on("partnerExit", (data)=>{
-            console.log(data)
-        }), error => console.log(error), fin => {
-            this.messageSubject$.next(null)
-            this.route.navigate(['/'])
+        console.log("partnerLeaveListener")
+        this.hubConnection.on("partnerExit", 
+        data=>{
+            this.partnerSubject$.next(false)
+        }), 
+        error => {
+            console.log(error)
         }
     }
 

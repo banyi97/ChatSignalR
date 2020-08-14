@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Chat.Dtos;
 using Chat.Interfaces;
 using Chat.Models;
+using Serilog;
 
 namespace Chat.Services
 {
@@ -28,6 +29,7 @@ namespace Chat.Services
                     if ((user.UserPreference & dto.Self) > 0 && (dto.UserPreference & user.Self) > 0)
                     {
                         groupId = user.GroupId;
+                        this._users.Remove(user);
                         return true;
                     }
                 }

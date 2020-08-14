@@ -35,40 +35,39 @@ namespace Chat.Controllers
         }
 
         [HubMethodName("searchPartner")]
-        public Task SearchPartnerAsync(UserDto dto)
+        public async Task SearchPartnerAsync(UserDto dto)
         {
             Log.Information("searchPartner");
             if (dto is null)
-                return Task.FromException(new NullReferenceException());
-            Log.Information($"Id: {dto.ConnectionId}");
-            Log.Information($"Self: {dto.Self}");
-            Log.Information($"Pref: {dto.UserPreference}");
+                return;
 
             Log.Information($"SearchPartner: Dto is not null");
             if (this._userService.TryFindPartner(dto, out var groupId))
             {
                 Log.Information($"SearchPartner: Find a partner");
                 this.Context.Items.Add("groupId", groupId);
-                this.Groups.AddToGroupAsync(this.Context.ConnectionId, groupId).GetAwaiter().GetResult();
-                return this.Clients.Group(groupId).SendCoreAsync("openSession", null);
+                await this.Groups.AddToGroupAsync(this.Context.ConnectionId, groupId);
+                await this.Clients.Group(groupId).SendCoreAsync("openSession", new object[]{});
+                return;
             }
             Log.Information($"SearchPartner: Not find partner");
             groupId = this._userService.AddUserToWaitList(dto);
             this.Context.Items.Add("groupId", groupId);
-            return this.Groups.AddToGroupAsync(this.Context.ConnectionId, groupId);
+            await this.Groups.AddToGroupAsync(this.Context.ConnectionId, groupId);
         }
 
-        [HubMethodName("cancelSearch")]
+        [HubMethodName("cancel")]
         public async Task CancelSearchAsync()
         {
             Log.Information($"CancelSearch");
             if (this.Context.Items.TryGetValue("groupId", out var groupId))
             {
+                this.Context.Items.Remove("groupId");
                 await this.Groups.RemoveFromGroupAsync(this.Context.ConnectionId, groupId as string);
             }
             this._userService.RemoveUserFromWaitList(this.Context.ConnectionId);
         }
-
+        
         [HubMethodName("sendMessage")]
         public Task SendMessageAsync(MessageDto dto)
         {
@@ -76,22 +75,22 @@ namespace Chat.Controllers
             if (this.Context.Items.TryGetValue("groupId", out var groupId))
             {
                 Log.Information("Send");
-                return this.Clients.OthersInGroup(groupId as string).SendCoreAsync("receiveMessage", new object[] { dto });
+                return this.Clients.Group(groupId as string).SendCoreAsync("receiveMessage", new object[] { dto });
             }
             Log.Information("Not found");
             return Task.CompletedTask;
         }
 
         [HubMethodName("closeSession")]
-        public Task CloseSessionAsync()
+        public async Task CloseSessionAsync()
         {
             Log.Information("closeSession");
             if (this.Context.Items.TryGetValue("groupId", out var groupId))
             {
                 this.Context.Items.Remove("groupId");
-                return this.Clients.OthersInGroup(groupId as string).SendCoreAsync("partnerExit", null);
+                await this.Groups.RemoveFromGroupAsync(this.Context.ConnectionId, groupId as string);
+                await this.Clients.OthersInGroup(groupId as string).SendCoreAsync("partnerExit", new object[] {});
             }
-            return Task.CompletedTask;
         }
     }
 }

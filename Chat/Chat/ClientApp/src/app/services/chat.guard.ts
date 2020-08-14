@@ -15,7 +15,7 @@ export class ChatGuard implements CanActivate {
     state: RouterStateSnapshot
   ): Observable<boolean> | Promise<boolean | UrlTree> | boolean {
     
-    return true
+    return this.sr.partner$
   }
 
 }

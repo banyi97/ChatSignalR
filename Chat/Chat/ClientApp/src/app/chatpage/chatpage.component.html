@@ -1,4 +1,7 @@
 <div class="container">
+    <div *ngIf="!(sr.partner$ | async)">
+        Your partner leave this chat room
+    </div>
     <mat-list *ngIf="sr.message$ | async as messages">
         <mat-list-item *ngFor="let message of messages" [ngClass]="{'sender': checkId(message.sender), 'receiver': !checkId(message.sender)}" > {{message.message}} </mat-list-item>        
     </mat-list>

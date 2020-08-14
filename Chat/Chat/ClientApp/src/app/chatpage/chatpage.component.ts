@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
 import { SignalRService } from '../services/signalR';
 import { BehaviorSubject, Observable } from 'rxjs';
 
@@ -7,9 +7,12 @@ import { BehaviorSubject, Observable } from 'rxjs';
   templateUrl: './chatpage.component.html',
   styleUrls: ['./chatpage.component.css']
 })
-export class ChatPageComponent {
+export class ChatPageComponent implements OnDestroy {
   constructor(private sr: SignalRService){
     //this.sr.setTestEnv()
+  }
+  ngOnDestroy(): void {
+    this.sr.closeSession()
   }
 
   public messbox: string = "";
@@ -25,6 +28,7 @@ export class ChatPageComponent {
 
   public exit(){
     console.log("exit")
+    this.sr.closeSession()
   }
 
   public checkId(id){
