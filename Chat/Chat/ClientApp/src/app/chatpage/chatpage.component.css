@@ -1,8 +1,8 @@
 .sender{
     background-color: antiquewhite;
-    direction: rtl;
+    text-align: left;
 }
 .receiver{
     background-color: coral;
-    direction: ltr;
+    text-align: right;
 }

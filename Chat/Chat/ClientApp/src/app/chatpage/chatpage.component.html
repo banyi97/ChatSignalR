@@ -1,11 +1,23 @@
 <div class="container">
-    <div *ngIf="!(sr.partner$ | async)">
-        Your partner leave this chat room
+    <div class="col">
+        <div *ngIf="!(sr.partner$ | async)" class="row">
+            Your partner leave this chat room
+        </div>
+        <div class="row">
+            <mat-list *ngIf="sr.message$ | async as messages" class="container">
+                <mat-list-item  *ngFor="let message of messages" [ngClass]="{'sender': checkId(message.sender), 'receiver': !checkId(message.sender)}"> 
+                    <div class="container">
+                        <div [ngClass]="{'sender': checkId(message.sender), 'receiver': !checkId(message.sender)}">
+                            {{message.message}}
+                        </div>
+                    </div>
+                </mat-list-item>        
+            </mat-list>
+        </div>
+        <div class="row py-2">
+            <input matInput (keyup.enter)="send()" [(ngModel)]="messbox" type="text" >
+            <button mat-button (click)="send()" [disabled]="disableSend">Send</button>
+            <button mat-button (click)="exit()">Exit</button>
+        </div>
     </div>
-    <mat-list *ngIf="sr.message$ | async as messages">
-        <mat-list-item *ngFor="let message of messages" [ngClass]="{'sender': checkId(message.sender), 'receiver': !checkId(message.sender)}" > {{message.message}} </mat-list-item>        
-    </mat-list>
-    <input matInput (keyup.enter)="send()" [(ngModel)]="messbox" type="text" >
-    <button mat-button (click)="send()" [disabled]="disableSend">Send</button>
-    <button mat-button (click)="exit()">Exit</button>
 </div>
