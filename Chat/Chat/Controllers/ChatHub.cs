@@ -28,6 +28,7 @@ namespace Chat.Controllers
             Log.Information($"Disconnected: {this.Context.ConnectionId}");
             if (this.Context.Items.TryGetValue("groupId",out var groupId))
             {
+                this._userService.RemoveUserFromWaitList(this.Context.ConnectionId);
                 await this.Clients.OthersInGroup(groupId as string).SendCoreAsync("partnerExit", null);
                 await this.Groups.RemoveFromGroupAsync(this.Context.ConnectionId, groupId as string);
             }
